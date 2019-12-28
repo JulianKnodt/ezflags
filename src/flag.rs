@@ -25,7 +25,7 @@ where
 {
   fn parse_from(&mut self, s: &str) -> Result<(), String> {
     match T::from_str(s) {
-      Err(_) => Err(format!("Failed to parse {}", s)),
+      Err(_) => Err(s.to_string()),
       Ok(v) => {
         self.replace(v);
         Ok(())
@@ -52,12 +52,15 @@ pub struct FlagSet<'a> {
 }
 
 fn show_help(h: &HashMap<&str, &str>) {
+  eprintln!("Usage:");
   h.iter().for_each(|(flag, info)| {
-    eprintln!("--{}", flag);
+    eprintln!("  -{}", flag);
     eprintln!("\t {}", info);
   });
 }
 
+/// Multiple flags that will be parsed together.
+/// Contains help info and maps names to destination.
 impl<'a> FlagSet<'a> {
   /// Creates a new empty FlagSet
   pub fn new() -> Self {
@@ -76,8 +79,7 @@ impl<'a> FlagSet<'a> {
     self.help_info.insert(name, help);
   }
   /// Parses an iterator of strings into this flag set.
-  /// Returns unused values
-  // TODO decide whether this should consume the flag set or not
+  /// Returns unmatched values from parsing or an error.
   pub fn parse<I>(&mut self, mut i: I) -> Result<Vec<String>, ParseError>
   where
     I: Iterator<Item = String>, {
@@ -97,7 +99,7 @@ impl<'a> FlagSet<'a> {
           if !flag.expects_value() {
             flag
               .parse_from("")
-              .map_err(ParseError::ParseFromFailure)?;
+              .map_err(|e| ParseError::ParseFromFailure(v.to_string(), e))?;
             continue;
           }
           let flag_val = match i.next() {
@@ -106,12 +108,15 @@ impl<'a> FlagSet<'a> {
           };
           flag
             .parse_from(&flag_val)
-            .map_err(ParseError::ParseFromFailure)?;
+            .map_err(|e| ParseError::ParseFromFailure(v.to_string(), e))?;
         },
       };
     }
     Ok(out)
   }
+  /// Parses argument from env::args without the program name.
+  /// Exits on failure, and displays help info to stderr.
+  /// Returns extra arguments which were not used in parsing.
   pub fn parse_args(&mut self) -> Vec<String> {
     use std::env::args;
     match self.parse(args().skip(1)) {
@@ -119,16 +124,16 @@ impl<'a> FlagSet<'a> {
       Err(e) => {
         let status = match e {
           ParseError::HelpRequested => 0,
-          ParseError::ParseFromFailure(v) => {
-            eprintln!("{}", v);
+          ParseError::ParseFromFailure(f, v) => {
+            eprintln!("Invalid value \"{}\" for flag -{}", f, v);
             1
           },
           ParseError::UnknownFlag(f) => {
-            eprintln!("Unknown flag -{}", f);
+            eprintln!("flag provided but not defined: -{}", f);
             1
           },
           ParseError::MissingValue(f) => {
-            eprintln!("Missing value for flag -{}", f);
+            eprintln!("Missing value for flag: -{}", f);
             1
           },
         };
@@ -139,20 +144,21 @@ impl<'a> FlagSet<'a> {
   }
 }
 
+/// Errors that can occur while parsing into flags.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ParseError {
-  /// Failed to parse a value
-  /// Returns error message from parsing
-  ParseFromFailure(String),
+  /// Failed to parse a value,
+  /// Returns error message from parsing and flag that it failed to parse into.
+  ParseFromFailure(String, String),
 
   /// Missing value for a flag that expected one
-  /// Specifies flag that was missing a value
+  /// Specifies flag that was missing a value.
   MissingValue(String),
 
-  /// Help flag was passed, parsing stopped
+  /// Help flag was passed, parsing stopped.
   HelpRequested,
 
-  /// Unknown flag was passed
+  /// Unknown flag was passed.
   UnknownFlag(String),
 }
 

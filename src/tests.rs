@@ -37,11 +37,6 @@ fn cannot_parse() {
   let mut bool_option: Option<bool> = None;
   fs.add("bool", "test bool option", &mut bool_option);
   assert!(fs
-    .parse(
-      vec!["--bool", "34"]
-        .into_iter()
-        .map(String::from)
-    )
+    .parse(vec!["--bool", "34"].into_iter().map(String::from))
     .is_err());
 }
-
