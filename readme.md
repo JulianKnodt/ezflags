@@ -28,6 +28,9 @@ let _remaining_args = fs.parse_args();
 assert_eq!(switch, true);
 ```
 
+Help can be printed by passing the `-h` or `--help` flag to the binary,
+and it will list all the flags along with help info provided and exit.
+
 ### Contributions
 
 Any contributions welcome, just leave a pull request, and I will try to get to it.
