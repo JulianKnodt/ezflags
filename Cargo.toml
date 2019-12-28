@@ -3,6 +3,9 @@ name = "ezflags"
 version = "0.1.0"
 authors = ["julianknodt <julianknodt@gmail.com>"]
 edition = "2018"
+repository = "https://github.com/JulianKnodt/ezflags"
+license = "MIT"
+maintenance = { status = "passively-maintained" }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
