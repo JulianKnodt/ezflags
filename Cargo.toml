@@ -6,6 +6,7 @@ edition = "2018"
 repository = "https://github.com/JulianKnodt/ezflags"
 license = "MIT"
 maintenance = { status = "passively-maintained" }
+description = "No-frills flags intended for small binaries."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
