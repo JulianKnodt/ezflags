@@ -72,9 +72,6 @@ impl<'a> FlagSet<'a> {
   /// Adds something flaggable with a given name and help message to the flag set.
   /// Panics if the name is one of the reserved help flags(help or h).
   pub fn add<F: Flaggable>(&mut self, name: &'static str, help: &'static str, f: &'a mut F) {
-    if name == HELP_LONG || name == HELP_SHORT {
-      panic!("Cannot override help flag");
-    }
     self.mappings.insert(name, f);
     self.help_info.insert(name, help);
   }
@@ -90,11 +87,7 @@ impl<'a> FlagSet<'a> {
         continue;
       }
       let v = v.trim_start_matches('-');
-      if v == HELP_LONG || v == HELP_SHORT {
-        return Err(ParseError::HelpRequested);
-      }
       match self.mappings.get_mut(&*v) {
-        None => return Err(ParseError::UnknownFlag(v.to_string())),
         Some(ref mut flag) => {
           if !flag.expects_value() {
             flag
@@ -110,6 +103,8 @@ impl<'a> FlagSet<'a> {
             .parse_from(&flag_val)
             .map_err(|e| ParseError::ParseFromFailure(v.to_string(), e))?;
         },
+        None if v == HELP_LONG || v == HELP_SHORT => return Err(ParseError::HelpRequested),
+        None => return Err(ParseError::UnknownFlag(v.to_string())),
       };
     }
     Ok(out)

@@ -1,11 +1,11 @@
 [package]
 name = "ezflags"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["julianknodt <julianknodt@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/JulianKnodt/ezflags"
 license = "MIT"
-maintenance = { status = "passively-maintained" }
+# maintenance = { status = "passively-maintained" }
 description = "No-frills flags intended for small binaries."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
