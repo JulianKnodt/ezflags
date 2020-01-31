@@ -114,22 +114,24 @@ impl<'a> FlagSet<'a> {
   /// Returns extra arguments which were not used in parsing.
   pub fn parse_args(&mut self) -> Vec<String> {
     use std::env::args;
+    const OK: i32 = 0;
+    const FAILURE: i32 = 1;
     match self.parse(args().skip(1)) {
       Ok(rem) => rem,
       Err(e) => {
         let status = match e {
-          ParseError::HelpRequested => 0,
+          ParseError::HelpRequested => OK,
           ParseError::ParseFromFailure(f, v) => {
             eprintln!("Invalid value \"{}\" for flag -{}", f, v);
-            1
+            FAILURE
           },
           ParseError::UnknownFlag(f) => {
             eprintln!("flag provided but not defined: -{}", f);
-            1
+            FAILURE
           },
           ParseError::MissingValue(f) => {
             eprintln!("Missing value for flag: -{}", f);
-            1
+            FAILURE
           },
         };
         show_help(&self.help_info);
