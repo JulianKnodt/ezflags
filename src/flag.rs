@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 /// Reserved long flag name for help
 pub const HELP_LONG: &str = "help";
@@ -19,15 +19,35 @@ pub trait Flaggable {
 }
 
 /// Implements flaggable for Option types that wrap things that can be parsed.
-impl<T> Flaggable for Option<T>
-where
-  T: std::str::FromStr,
-{
+impl<T: FromStr> Flaggable for Option<T> {
   fn parse_from(&mut self, s: &str) -> Result<(), String> {
     match T::from_str(s) {
       Err(_) => Err(s.to_string()),
       Ok(v) => {
         self.replace(v);
+        Ok(())
+      },
+    }
+  }
+}
+
+/// Simple indicator for a flag which definitely contains a value.
+#[derive(Debug)]
+pub struct Preset<T>(pub T);
+impl<T> From<T> for Preset<T> {
+  fn from(t: T) -> Self { Preset(t) }
+}
+impl<T> Preset<T> {
+  #[inline]
+  pub fn into_inner(self) -> T { self.0 }
+}
+
+impl<T: FromStr> Flaggable for Preset<T> {
+  fn parse_from(&mut self, s: &str) -> Result<(), String> {
+    match T::from_str(s) {
+      Err(_) => Err(s.to_string()),
+      Ok(v) => {
+        self.0 = v;
         Ok(())
       },
     }
